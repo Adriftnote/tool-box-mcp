@@ -10,7 +10,24 @@ Central registry for AI tools with **Vector Search + Knowledge Graph** for intel
 - **Progressive Disclosure**: Load only what's needed, 90%+ token savings
 - **Unified Registry**: MCP Servers, Skills, Tools, Commands in one place
 
-## Tools
+## Quick Start
+
+```bash
+# Clone
+git clone https://github.com/Adriftnote/tool-box-mcp.git
+cd tool-box-mcp
+
+# Install dependencies
+npm install
+
+# Run setup (initializes ChromaDB and sample data)
+./scripts/setup.sh
+
+# Start server
+npm start
+```
+
+## Tools (11 total)
 
 | Tool | Description |
 |------|-------------|
@@ -28,31 +45,35 @@ Central registry for AI tools with **Vector Search + Knowledge Graph** for intel
 
 ## Installation
 
+### Prerequisites
+
+- Node.js 18+
+- Python 3.8+ (for ChromaDB)
+- pip (Python package manager)
+
+### Step 1: Clone and Install
+
 ```bash
 git clone https://github.com/Adriftnote/tool-box-mcp.git
 cd tool-box-mcp
 npm install
-npm run build
 ```
 
-### Data Setup
-
-Initialize ChromaDB and Knowledge Graph:
+### Step 2: Run Setup
 
 ```bash
-./scripts/run-all.sh
+# This installs Python dependencies and initializes ChromaDB
+./scripts/setup.sh
 ```
 
-## Configuration
+### Step 3: Configure MCP Client
 
-### Claude Code / MCP Client
-
-Add to your MCP settings:
+Add to your Claude Code or MCP client settings:
 
 ```json
 {
   "mcpServers": {
-    "tool-hub": {
+    "tool-box": {
       "type": "stdio",
       "command": "node",
       "args": ["/path/to/tool-box-mcp/dist/index.js"]
@@ -61,12 +82,25 @@ Add to your MCP settings:
 }
 ```
 
+## Configuration
+
+### Data Files
+
+After installation, configure these files in the `data/` directory:
+
+| File | Purpose |
+|------|---------|
+| `mcp-config.json` | MCP servers to chain with |
+| `knowledge-graph.json` | Tool relationships |
+| `chromadb/` | Vector search database |
+
 ### Environment Variables (Optional)
+
+Override default paths with environment variables:
 
 ```bash
 TOOLHUB_GRAPH_PATH       # Knowledge Graph JSON path
-TOOLHUB_MCP_CONFIG       # MCP chainer config path
-TOOLHUB_REGISTER_SCRIPT  # Tool registration script path
+TOOLHUB_MCP_CONFIG       # MCP config path
 TOOLHUB_PYTHON_PATH      # Python interpreter path
 ```
 
@@ -76,29 +110,10 @@ TOOLHUB_PYTHON_PATH      # Python interpreter path
 
 ```typescript
 toolhub_search({
-  query: "TikTok data analysis",
+  query: "data analysis excel",
   limit: 10,
   include_graph: true
 })
-```
-
-**Response**:
-```json
-{
-  "results": [
-    {
-      "name": "sqlite_tiktok",
-      "type": "MCP_Server",
-      "description": "TikTok analytics database",
-      "similarity": 0.89
-    }
-  ],
-  "stats": {
-    "totalCount": 5,
-    "tokenEstimate": 3500,
-    "savingsPercent": 96.1
-  }
-}
 ```
 
 ### 2. Execute Tool Chain
@@ -107,32 +122,27 @@ toolhub_search({
 toolhub_chain({
   mcpPath: [
     {
-      toolName: "sqlite_tiktok_read_query",
-      toolArgs: "{\"query\": \"SELECT * FROM daily_metrics LIMIT 10\"}",
+      toolName: "sqlite_read_query",
+      toolArgs: "{\"query\": \"SELECT * FROM metrics LIMIT 10\"}",
       outputTransform: "sqlite→2d"
     },
     {
-      toolName: "document_edit_create_excel_file",
+      toolName: "document_create_excel",
       toolArgs: "{\"filepath\": \"/tmp/report.xlsx\", \"content\": \"CHAIN_RESULT\"}"
     }
   ]
 })
 ```
 
-**Result**: SQLite query → Excel file in one call
-
-### 3. Prepare Chain (Pre-Analysis)
+### 3. Register New Tool
 
 ```typescript
-toolhub_prepare_chain({
-  mcpPath: [...],
-  include_skills: true,
-  include_schemas: true,
-  include_transforms: true
+toolhub_register({
+  name: "my-mcp-server",
+  type: "MCP_Server",
+  description: "My custom MCP server for data processing"
 })
 ```
-
-**Response**: Input schemas, related skills, recommended transforms
 
 ## Architecture
 
@@ -157,7 +167,7 @@ toolhub_prepare_chain({
          ▼                    ▼
 ┌───────────────┐    ┌───────────────┐
 │  ChromaDB     │    │  Knowledge    │
-│  Vector Store │    │  Graph JSON   │
+│  (data/)      │    │  Graph JSON   │
 └───────────────┘    └───────────────┘
 ```
 
@@ -175,43 +185,59 @@ Built-in transforms for chain data flow:
 | `keys` | Get object keys |
 | `values` | Get object values |
 
-## Performance
-
-### Token Savings
-
-| Query Type | Tools Returned | Token Savings |
-|------------|----------------|---------------|
-| n8n workflow | 7-9 | 89-92% |
-| TikTok data | 5-7 | 92-94% |
-| Excel report | 3-5 | 94-96% |
-
-### Progressive Disclosure
-
-| Item | Full Load | Progressive | Savings |
-|------|-----------|-------------|---------|
-| 1 MCP Server | 800 tokens | 200 tokens | 75% |
-| 4 Skills | 12,000 tokens | 400 tokens | 96.7% |
-| **Total** | **89,600 tokens** | **~7,000 tokens** | **92%** |
-
 ## Development
 
 ```bash
-# Build
+# Build from source
 npm run build
 
-# Run
+# Run server
 npm start
 
 # Type check
 npm run typecheck
 ```
 
-## Dependencies
+## Project Structure
 
-- `@modelcontextprotocol/sdk` - MCP protocol implementation
-- `zod` - Input schema validation
-- `progressive-loader` - Chain building utilities
-- ChromaDB (Python) - Vector search backend
+```
+tool-box-mcp/
+├── dist/                 # Compiled JavaScript (included)
+├── src/
+│   ├── index.ts          # Main server entry
+│   ├── schemas/          # Zod input schemas
+│   └── services/         # Search, chain, transform services
+├── scripts/
+│   ├── setup.sh          # Initial setup script
+│   └── register-tool.py  # Tool registration utility
+├── data/
+│   ├── chromadb/         # Vector database
+│   ├── knowledge-graph.json
+│   └── mcp-config.json
+└── package.json
+```
+
+## Troubleshooting
+
+### "ChromaDB not found"
+
+```bash
+pip install chromadb sentence-transformers
+```
+
+### "Python not found"
+
+Set the Python path:
+```bash
+export TOOLHUB_PYTHON_PATH=/usr/bin/python3
+```
+
+### "No tools found"
+
+Run setup to initialize sample data:
+```bash
+./scripts/setup.sh
+```
 
 ## License
 

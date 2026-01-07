@@ -1,0 +1,23 @@
+{
+  "nodes": [
+    {
+      "id": "example-mcp-server",
+      "type": "MCP_Server",
+      "name": "example-mcp-server",
+      "description": "Example MCP server for demonstration"
+    },
+    {
+      "id": "example-skill",
+      "type": "Skill",
+      "name": "example-skill",
+      "description": "Example skill for demonstration"
+    }
+  ],
+  "edges": [
+    {
+      "source": "example-mcp-server",
+      "target": "example-skill",
+      "relation": "BENEFITS_FROM"
+    }
+  ]
+}

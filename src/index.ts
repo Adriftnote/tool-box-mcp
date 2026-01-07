@@ -43,15 +43,20 @@ import { ChainBuilder, ChainExecutor, type ChainStep, type ChainResult, type Bui
 import { execSync } from "child_process";
 import { CHARACTER_LIMIT } from "./constants.js";
 import { ToolDiscoveryService, executeChain, type ChainStep as DiscoveryChainStep } from "./services/tool-discovery.js";
-import { resolve } from "path";
-import { homedir } from "os";
+import { resolve, dirname } from "path";
+import { fileURLToPath } from "url";
 
-// Path configuration (use env vars or defaults)
+// Get project root directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const PROJECT_ROOT = resolve(__dirname, '..');
+
+// Path configuration (use env vars or project-relative defaults)
 const PATHS = {
-  knowledgeGraph: process.env.TOOLHUB_GRAPH_PATH || resolve(homedir(), '.claude-memory', 'knowledge-graph.json'),
-  mcpChainerConfig: process.env.TOOLHUB_MCP_CONFIG || resolve(homedir(), '.mcp-chainer-config.json'),
-  registerScript: process.env.TOOLHUB_REGISTER_SCRIPT || resolve(homedir(), 'progressive-loader-mcp-server', 'scripts', 'register-tool.py'),
-  pythonPath: process.env.TOOLHUB_PYTHON_PATH || resolve(homedir(), '.claude-memory', 'venv', 'bin', 'python3')
+  knowledgeGraph: process.env.TOOLHUB_GRAPH_PATH || resolve(PROJECT_ROOT, 'data', 'knowledge-graph.json'),
+  mcpChainerConfig: process.env.TOOLHUB_MCP_CONFIG || resolve(PROJECT_ROOT, 'data', 'mcp-config.json'),
+  registerScript: process.env.TOOLHUB_REGISTER_SCRIPT || resolve(PROJECT_ROOT, 'scripts', 'register-tool.py'),
+  pythonPath: process.env.TOOLHUB_PYTHON_PATH || 'python3'
 };
 
 // Initialize services
