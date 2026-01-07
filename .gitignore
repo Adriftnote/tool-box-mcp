@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Session/Progress files (local only)
+SESSION.md
+PROGRESS-REPORT.md
+PHASE*-REPORT.md
+DATA-SETUP.md
+
+# Lock files (optional - uncomment if you want to track)
+# package-lock.json

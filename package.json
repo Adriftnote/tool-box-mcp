@@ -1,0 +1,40 @@
+{
+  "name": "tool-hub-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for AI Tool Hub - Vector Search + Knowledge Graph based tool discovery and registration",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "tool-hub-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test:phase1": "node scripts/test-phase1.js",
+    "test:phase2": "node scripts/test-phase2.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "tool-hub",
+    "vector-search",
+    "knowledge-graph",
+    "claude-code",
+    "ai-tools"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "jsonpath-plus": "^10.3.0",
+    "progressive-loader": "file:/root/projects/progressive-loader",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
