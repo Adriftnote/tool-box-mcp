@@ -1,5 +1,5 @@
 {
-  "name": "tool-hub-mcp-server",
+  "name": "tool-box-mcp",
   "version": "1.0.0",
   "description": "MCP server for AI Tool Hub - Vector Search + Knowledge Graph based tool discovery and registration",
   "type": "module",
