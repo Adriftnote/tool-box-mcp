@@ -11,6 +11,7 @@ import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { JSONPath } from "jsonpath-plus";
 import fs from "fs";
 import { applyTransform, listTransforms } from "./transforms.js";
+import { MCP_CONFIG_PATH } from "../constants.js";
 
 // Re-export for backward compatibility
 export { applyTransform, listTransforms };
@@ -59,7 +60,7 @@ export class ToolDiscoveryService {
   private tools: DiscoveredTool[] = [];
   private configPath: string;
 
-  constructor(configPath: string = '/root/.mcp-chainer-config.json') {
+  constructor(configPath: string = MCP_CONFIG_PATH) {
     this.configPath = configPath;
   }
 

@@ -12,8 +12,11 @@ import {
   DEFAULT_LIMIT,
   DEFAULT_GRAPH_DEPTH,
   AVG_TOKENS_PER_TOOL,
-  FULL_CONTEXT_TOKENS
+  FULL_CONTEXT_TOKENS,
+  PYTHON_PATH,
+  SCRIPTS_PATH
 } from "../constants.js";
+import { resolve } from "path";
 
 export class HybridSearchService {
   private vectorSearch: VectorSearchService;
@@ -157,10 +160,9 @@ export class HybridSearchService {
     try {
       const { execSync } = await import('child_process');
       const toolNamesStr = toolNames.join(',');
-      const pythonPath = '/root/.claude-memory/venv/bin/python3';
-      const scriptPath = '/root/.claude-memory/search-skills-by-related.py';
+      const scriptPath = resolve(SCRIPTS_PATH, 'search-skills-by-related.py');
 
-      const output = execSync(`${pythonPath} ${scriptPath} "${toolNamesStr}"`, {
+      const output = execSync(`${PYTHON_PATH} ${scriptPath} "${toolNamesStr}"`, {
         encoding: 'utf-8',
         maxBuffer: 10 * 1024 * 1024
       });

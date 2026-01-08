@@ -9,6 +9,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { JSONPath } from "jsonpath-plus";
 import fs from "fs";
 import { applyTransform, listTransforms } from "./transforms.js";
+import { MCP_CONFIG_PATH } from "../constants.js";
 // Re-export for backward compatibility
 export { applyTransform, listTransforms };
 // Get supported transform types dynamically from registry
@@ -20,7 +21,7 @@ export class ToolDiscoveryService {
     config = null;
     tools = [];
     configPath;
-    constructor(configPath = '/root/.mcp-chainer-config.json') {
+    constructor(configPath = MCP_CONFIG_PATH) {
         this.configPath = configPath;
     }
     /**

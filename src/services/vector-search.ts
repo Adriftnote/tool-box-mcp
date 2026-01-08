@@ -6,7 +6,8 @@
  */
 
 import { execSync } from "child_process";
-import { PYTHON_VENV_PATH, SEARCH_SCRIPT_PATH } from "../constants.js";
+import { resolve } from "path";
+import { PYTHON_PATH, SCRIPTS_PATH } from "../constants.js";
 import { KnowledgeSource } from "./types.js";
 
 export interface VectorSearchResult {
@@ -21,8 +22,8 @@ export class VectorSearchService {
   private scriptPath: string;
 
   constructor(pythonPath?: string, scriptPath?: string) {
-    this.pythonPath = pythonPath || PYTHON_VENV_PATH;
-    this.scriptPath = scriptPath || SEARCH_SCRIPT_PATH;
+    this.pythonPath = pythonPath || PYTHON_PATH;
+    this.scriptPath = scriptPath || resolve(SCRIPTS_PATH, 'search-tools.py');
   }
 
   /**
