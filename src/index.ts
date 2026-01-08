@@ -39,7 +39,7 @@ import {
   type PrepareChainInput,
   type ToolhubChainInput
 } from "./schemas/input.js";
-import { ChainBuilder, ChainExecutor, type ChainStep, type ChainResult, type BuiltChain } from "progressive-loader";
+import { ChainBuilder, ChainExecutor, type ChainStep, type ChainResult, type BuiltChain } from "./lib/progressive-loader/index.js";
 import { execSync } from "child_process";
 import { CHARACTER_LIMIT } from "./constants.js";
 import { ToolDiscoveryService, executeChain, type ChainStep as DiscoveryChainStep } from "./services/tool-discovery.js";

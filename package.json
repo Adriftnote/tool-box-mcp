@@ -29,7 +29,6 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
     "jsonpath-plus": "^10.3.0",
-    "progressive-loader": "file:/root/projects/progressive-loader",
     "zod": "^3.23.8"
   },
   "devDependencies": {

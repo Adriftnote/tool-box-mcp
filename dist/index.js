@@ -17,7 +17,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { HybridSearchService } from "./services/hybrid-search.js";
 import { SearchToolsInputSchema, ExpandGraphInputSchema, GetToolClusterInputSchema, RegisterToolInputSchema, DeleteToolInputSchema, ListToolsInputSchema, ExecuteChainInputSchema, PrepareChainInputSchema, ToolhubChainInputSchema, EmptyInputSchema, ResponseFormat } from "./schemas/input.js";
-import { ChainBuilder, ChainExecutor } from "progressive-loader";
+import { ChainBuilder, ChainExecutor } from "./lib/progressive-loader/index.js";
 import { execSync } from "child_process";
 import { CHARACTER_LIMIT } from "./constants.js";
 import { ToolDiscoveryService, executeChain } from "./services/tool-discovery.js";
