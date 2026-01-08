@@ -1,16 +1,34 @@
-#!/root/.claude-memory/venv/bin/python3
+#!/usr/bin/env python3
 """
 Register/Delete tools in ChromaDB for Progressive Loader
+
+Usage:
+    python register-tool.py list
+    python register-tool.py register '{"name": "my-tool", "type": "MCP_Server", "description": "..."}'
+    python register-tool.py delete my-tool
 """
 
 import sys
-sys.path.insert(0, '/root/.claude-memory/venv/lib/python3.12/site-packages')
+import os
+import glob
+
+# 프로젝트 루트 경로 (스크립트 위치 기준)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
+
+# venv site-packages 경로 자동 탐색 (Python 버전에 상관없이)
+VENV_LIB = os.path.join(PROJECT_ROOT, "venv", "lib")
+if os.path.exists(VENV_LIB):
+    site_packages = glob.glob(os.path.join(VENV_LIB, "python*/site-packages"))
+    if site_packages:
+        sys.path.insert(0, site_packages[0])
 
 import json
 import chromadb
 from chromadb.utils import embedding_functions
 
-CHROMA_PATH = "/root/.claude-mem/vector-db"
+# ChromaDB 경로 (프로젝트 상대 경로)
+CHROMA_PATH = os.path.join(PROJECT_ROOT, "data", "vector-db")
 COLLECTION_NAME = "claude_tools"
 
 EMBEDDING_FUNCTION = embedding_functions.SentenceTransformerEmbeddingFunction(

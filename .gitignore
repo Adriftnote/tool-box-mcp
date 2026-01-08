@@ -1,8 +1,14 @@
 # Dependencies
 node_modules/
 
+# Python virtual environment
+venv/
+
 # Build output (included for easy installation)
 # dist/
+
+# ChromaDB vector database (generated on setup)
+data/vector-db/
 
 # Logs
 *.log
