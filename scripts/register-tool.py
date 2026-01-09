@@ -16,12 +16,25 @@ import glob
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 
-# venv site-packages 경로 자동 탐색 (Python 버전에 상관없이)
-VENV_LIB = os.path.join(PROJECT_ROOT, "venv", "lib")
-if os.path.exists(VENV_LIB):
-    site_packages = glob.glob(os.path.join(VENV_LIB, "python*/site-packages"))
-    if site_packages:
-        sys.path.insert(0, site_packages[0])
+# venv site-packages 경로 자동 탐색 (Cross-platform)
+# Windows: venv/Lib/site-packages
+# Linux/Mac: venv/lib/python*/site-packages
+def find_venv_site_packages():
+    # Windows 경로 먼저 확인
+    win_path = os.path.join(PROJECT_ROOT, "venv", "Lib", "site-packages")
+    if os.path.exists(win_path):
+        return win_path
+    # Linux/Mac 경로
+    unix_lib = os.path.join(PROJECT_ROOT, "venv", "lib")
+    if os.path.exists(unix_lib):
+        site_packages = glob.glob(os.path.join(unix_lib, "python*/site-packages"))
+        if site_packages:
+            return site_packages[0]
+    return None
+
+venv_site_packages = find_venv_site_packages()
+if venv_site_packages:
+    sys.path.insert(0, venv_site_packages)
 
 import json
 import chromadb

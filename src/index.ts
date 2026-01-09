@@ -56,7 +56,7 @@ const PATHS = {
   knowledgeGraph: process.env.TOOLHUB_GRAPH_PATH || resolve(PROJECT_ROOT, 'data', 'knowledge-graph.json'),
   mcpChainerConfig: process.env.TOOLHUB_MCP_CONFIG || resolve(PROJECT_ROOT, 'data', 'mcp-config.json'),
   registerScript: process.env.TOOLHUB_REGISTER_SCRIPT || resolve(PROJECT_ROOT, 'scripts', 'register-tool.py'),
-  pythonPath: process.env.TOOLHUB_PYTHON_PATH || 'python3'
+  pythonPath: process.env.TOOLHUB_PYTHON_PATH || (process.platform === 'win32' ? 'python' : 'python3')
 };
 
 // Initialize services

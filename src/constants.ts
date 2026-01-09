@@ -16,7 +16,9 @@ export const DEFAULT_LIMIT = 10;
 export const MAX_LIMIT = 50;
 
 // Paths (configurable via environment, defaults to project-relative)
-export const PYTHON_PATH = process.env.TOOLHUB_PYTHON_PATH || 'python3';
+// Windows uses 'python', Linux/Mac uses 'python3'
+export const PYTHON_PATH = process.env.TOOLHUB_PYTHON_PATH
+  || (process.platform === 'win32' ? 'python' : 'python3');
 export const KNOWLEDGE_GRAPH_PATH = process.env.TOOLHUB_GRAPH_PATH || resolve(PROJECT_ROOT, 'data', 'knowledge-graph.json');
 export const MCP_CONFIG_PATH = process.env.TOOLHUB_MCP_CONFIG || resolve(PROJECT_ROOT, 'data', 'mcp-config.json');
 export const CHROMADB_PATH = process.env.TOOLHUB_CHROMADB_PATH || resolve(PROJECT_ROOT, 'data', 'chromadb');
