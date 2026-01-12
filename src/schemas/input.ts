@@ -151,10 +151,37 @@ export type DeleteToolInput = z.infer<typeof DeleteToolInputSchema>;
 export const ListToolsInputSchema = z.object({
   type_filter: z.enum(["MCP_Server", "Skill", "Tool", "Command", "all"])
     .default("all")
-    .describe("Filter by tool type")
+    .describe("Filter by tool type"),
+
+  limit: z.number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .describe("Maximum number of tools to return per page"),
+
+  offset: z.number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe("Number of tools to skip (for pagination)")
 }).strict();
 
 export type ListToolsInput = z.infer<typeof ListToolsInputSchema>;
+
+/**
+ * Helper to validate JSON string (allows CHAIN_RESULT placeholder)
+ */
+const isValidJsonOrPlaceholder = (val: string): boolean => {
+  // Allow CHAIN_RESULT placeholder in the string
+  const testVal = val.replace(/"CHAIN_RESULT"/g, '"__PLACEHOLDER__"').replace(/CHAIN_RESULT/g, '"__PLACEHOLDER__"');
+  try {
+    JSON.parse(testVal);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * Schema for ChainStep (individual chain step)
@@ -164,6 +191,9 @@ export const ChainStepSchema = z.object({
     .describe("Fully qualified tool name (e.g., 'sqlite_tiktok_read_query')"),
 
   toolArgs: z.string()
+    .refine(isValidJsonOrPlaceholder, {
+      message: "toolArgs must be valid JSON (CHAIN_RESULT placeholder is allowed)"
+    })
     .describe("JSON string with tool arguments. Use 'CHAIN_RESULT' as placeholder for previous result"),
 
   inputPath: z.string()
@@ -232,7 +262,11 @@ export type PrepareChainInput = z.infer<typeof PrepareChainInputSchema>;
 export const ToolhubChainInputSchema = z.object({
   mcpPath: z.array(z.object({
     toolName: z.string().describe("Tool name (e.g., 'sqlite_tiktok_read_query')"),
-    toolArgs: z.string().describe("JSON string with tool arguments. Use 'CHAIN_RESULT' placeholder for previous result."),
+    toolArgs: z.string()
+      .refine(isValidJsonOrPlaceholder, {
+        message: "toolArgs must be valid JSON (CHAIN_RESULT placeholder is allowed)"
+      })
+      .describe("JSON string with tool arguments. Use 'CHAIN_RESULT' placeholder for previous result."),
     inputPath: z.string().optional().describe("JSONPath to extract from previous result"),
     outputPath: z.string().optional().describe("JSONPath to extract from this tool's result"),
     outputTransform: z.string().optional().describe("Transform type: 'sqlite→2d', 'json→object', 'object→array', 'flatten', 'none'")

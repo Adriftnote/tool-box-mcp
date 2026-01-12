@@ -190,10 +190,16 @@ export type DeleteToolInput = z.infer<typeof DeleteToolInputSchema>;
  */
 export declare const ListToolsInputSchema: z.ZodObject<{
     type_filter: z.ZodDefault<z.ZodEnum<["MCP_Server", "Skill", "Tool", "Command", "all"]>>;
+    limit: z.ZodDefault<z.ZodNumber>;
+    offset: z.ZodDefault<z.ZodNumber>;
 }, "strict", z.ZodTypeAny, {
+    limit: number;
     type_filter: "MCP_Server" | "Skill" | "Tool" | "Command" | "all";
+    offset: number;
 }, {
+    limit?: number | undefined;
     type_filter?: "MCP_Server" | "Skill" | "Tool" | "Command" | "all" | undefined;
+    offset?: number | undefined;
 }>;
 export type ListToolsInput = z.infer<typeof ListToolsInputSchema>;
 /**
@@ -201,7 +207,7 @@ export type ListToolsInput = z.infer<typeof ListToolsInputSchema>;
  */
 export declare const ChainStepSchema: z.ZodObject<{
     toolName: z.ZodString;
-    toolArgs: z.ZodString;
+    toolArgs: z.ZodEffects<z.ZodString, string, string>;
     inputPath: z.ZodOptional<z.ZodString>;
     outputPath: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
@@ -222,7 +228,7 @@ export declare const ExecuteChainInputSchema: z.ZodEffects<z.ZodObject<{
     query: z.ZodOptional<z.ZodString>;
     mcpPath: z.ZodOptional<z.ZodArray<z.ZodObject<{
         toolName: z.ZodString;
-        toolArgs: z.ZodString;
+        toolArgs: z.ZodEffects<z.ZodString, string, string>;
         inputPath: z.ZodOptional<z.ZodString>;
         outputPath: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
@@ -286,7 +292,7 @@ export type ExecuteChainInput = z.infer<typeof ExecuteChainInputSchema>;
 export declare const PrepareChainInputSchema: z.ZodObject<{
     mcpPath: z.ZodArray<z.ZodObject<{
         toolName: z.ZodString;
-        toolArgs: z.ZodString;
+        toolArgs: z.ZodEffects<z.ZodString, string, string>;
         inputPath: z.ZodOptional<z.ZodString>;
         outputPath: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
@@ -331,7 +337,7 @@ export type PrepareChainInput = z.infer<typeof PrepareChainInputSchema>;
 export declare const ToolhubChainInputSchema: z.ZodObject<{
     mcpPath: z.ZodArray<z.ZodObject<{
         toolName: z.ZodString;
-        toolArgs: z.ZodString;
+        toolArgs: z.ZodEffects<z.ZodString, string, string>;
         inputPath: z.ZodOptional<z.ZodString>;
         outputPath: z.ZodOptional<z.ZodString>;
         outputTransform: z.ZodOptional<z.ZodString>;

@@ -491,12 +491,14 @@ Use toolhub_list to find tool IDs.`,
 // =============================================================================
 server.registerTool("toolhub_list", {
     title: "List Registered Tools",
-    description: `List all tools registered in Progressive Loader.
+    description: `List all tools registered in Progressive Loader with pagination support.
 
 Args:
   - type_filter: Filter by type ('MCP_Server', 'Skill', 'Tool', 'Command', 'all')
+  - limit: Maximum number of tools per page (default: 20, max: 100)
+  - offset: Number of tools to skip for pagination (default: 0)
 
-Returns count by type and full tool list.`,
+Returns count by type, paginated tool list, and pagination info.`,
     inputSchema: ListToolsInputSchema,
     annotations: {
         readOnlyHint: true,
@@ -514,30 +516,54 @@ Returns count by type and full tool list.`,
         });
         const result = JSON.parse(output);
         // Apply filter
-        let tools = result.tools;
+        let filteredTools = result.tools;
         if (params.type_filter !== 'all') {
-            tools = tools.filter((t) => t.type === params.type_filter);
+            filteredTools = filteredTools.filter((t) => t.type === params.type_filter);
+        }
+        // Calculate pagination
+        const total = filteredTools.length;
+        const limit = params.limit ?? 20;
+        const offset = params.offset ?? 0;
+        const paginatedTools = filteredTools.slice(offset, offset + limit);
+        const hasMore = offset + limit < total;
+        // Calculate type counts (from filtered tools, not paginated)
+        const byType = {};
+        for (const tool of filteredTools) {
+            byType[tool.type] = (byType[tool.type] || 0) + 1;
         }
         const summary = {
-            total: tools.length,
-            byType: {},
-            tools: tools
+            total,
+            byType,
+            tools: paginatedTools,
+            pagination: {
+                limit,
+                offset,
+                has_more: hasMore,
+                total_count: total
+            }
         };
-        for (const tool of tools) {
-            summary.byType[tool.type] = (summary.byType[tool.type] || 0) + 1;
-        }
         // Format output
         const lines = [
-            `📊 Registered Tools: ${summary.total}`,
+            `📊 Registered Tools: ${total}`,
+            `   Showing: ${offset + 1}-${Math.min(offset + limit, total)} of ${total}`,
             '',
             '**By Type:**'
         ];
-        for (const [type, count] of Object.entries(summary.byType)) {
+        for (const [type, count] of Object.entries(byType)) {
             lines.push(`- ${type}: ${count}`);
         }
-        lines.push('', '**Tools with mcp-cli:**');
-        for (const tool of tools.filter((t) => t.hasMcpCli)) {
-            lines.push(`- ${tool.name} (${tool.type})`);
+        lines.push('', '**Tools (current page):**');
+        for (const tool of paginatedTools) {
+            const flags = [];
+            if (tool.hasMcpCli)
+                flags.push('mcp-cli');
+            if (tool.hasSkillMeta)
+                flags.push('skill');
+            const flagStr = flags.length > 0 ? ` [${flags.join(', ')}]` : '';
+            lines.push(`- ${tool.name} (${tool.type})${flagStr}`);
+        }
+        if (hasMore) {
+            lines.push('', `📄 More results available. Use offset=${offset + limit} for next page.`);
         }
         return {
             content: [{
@@ -558,15 +584,14 @@ Returns count by type and full tool list.`,
     }
 });
 // =============================================================================
-// Tool 7: toolhub_execute
+// Tool 7: toolhub_build_chain (formerly toolhub_execute)
 // =============================================================================
-server.registerTool("toolhub_execute", {
-    title: "Execute Tool Chain",
-    description: `Execute a tool chain based on cluster results or manual definition.
+server.registerTool("toolhub_build_chain", {
+    title: "Build Tool Chain",
+    description: `Build a tool chain structure based on cluster results or manual definition.
 
-This tool combines search, chain building, and execution in one call.
-It can auto-generate chains from a query using Knowledge Graph relationships,
-or execute a manually defined chain.
+This tool generates chain structures from queries or validates manual chain definitions.
+It does NOT execute the chain - use toolhub_chain for execution.
 
 Args:
   - query (string, optional): Natural language query for auto chain generation
@@ -1025,6 +1050,105 @@ function recommendTransform(sourceTool, targetTool) {
     }
     return undefined;
 }
+// =============================================================================
+// Tool 12: toolhub_health
+// =============================================================================
+server.registerTool("toolhub_health", {
+    title: "Health Check",
+    description: `Check Tool Hub service status.
+
+Returns:
+  - chromadb: Connection status to vector database
+  - knowledgeGraph: Knowledge graph file status
+  - toolCount: Number of registered tools
+  - version: Server version`,
+    inputSchema: EmptyInputSchema,
+    annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+    }
+}, async () => {
+    const status = {
+        chromadb: 'unknown',
+        knowledgeGraph: 'loaded',
+        toolCount: 0,
+        version: '1.0.0',
+        paths: {
+            scripts: resolve(PROJECT_ROOT, 'scripts'),
+            knowledgeGraph: PATHS.knowledgeGraph,
+            chromadb: resolve(PROJECT_ROOT, 'data', 'vector-db')
+        }
+    };
+    // Check ChromaDB via list command
+    try {
+        const command = `${PATHS.pythonPath} ${PATHS.registerScript} list`;
+        const output = execSync(command, {
+            encoding: 'utf-8',
+            maxBuffer: 10 * 1024 * 1024,
+            timeout: 10000
+        });
+        const result = JSON.parse(output);
+        if (result.success) {
+            status.chromadb = 'connected';
+            status.toolCount = result.total || 0;
+        }
+        else {
+            status.chromadb = 'error';
+            status.chromadbError = result.error || 'Unknown error';
+        }
+    }
+    catch (error) {
+        status.chromadb = 'error';
+        status.chromadbError = error instanceof Error ? error.message : String(error);
+    }
+    // Check Knowledge Graph
+    try {
+        const fs = await import('fs');
+        if (!fs.existsSync(PATHS.knowledgeGraph)) {
+            status.knowledgeGraph = 'not_found';
+            status.knowledgeGraphError = `File not found: ${PATHS.knowledgeGraph}`;
+        }
+    }
+    catch (error) {
+        status.knowledgeGraph = 'error';
+        status.knowledgeGraphError = error instanceof Error ? error.message : String(error);
+    }
+    // Format output
+    const lines = [
+        '🏥 Tool Hub Health Check',
+        '',
+        `**Version:** ${status.version}`,
+        '',
+        '**Services:**',
+        `- ChromaDB: ${status.chromadb === 'connected' ? '✅ Connected' : '❌ ' + (status.chromadbError || 'Error')}`,
+        `- Knowledge Graph: ${status.knowledgeGraph === 'loaded' ? '✅ Loaded' : '❌ ' + (status.knowledgeGraphError || 'Error')}`,
+        '',
+        `**Tools Registered:** ${status.toolCount}`,
+        '',
+        '**Paths:**',
+        `- Scripts: ${status.paths.scripts}`,
+        `- Knowledge Graph: ${status.paths.knowledgeGraph}`,
+        `- ChromaDB: ${status.paths.chromadb}`
+    ];
+    if (status.chromadb === 'error' || status.knowledgeGraph !== 'loaded') {
+        lines.push('', '**Troubleshooting:**');
+        if (status.chromadb === 'error') {
+            lines.push('- Ensure Python venv is set up: `cd scripts && python -m venv ../venv`');
+            lines.push('- Install dependencies: `pip install chromadb sentence-transformers`');
+            lines.push('- Check TOOLHUB_PYTHON_PATH environment variable');
+        }
+        if (status.knowledgeGraph !== 'loaded') {
+            lines.push('- Create knowledge-graph.json in data/ folder');
+            lines.push('- Check TOOLHUB_GRAPH_PATH environment variable');
+        }
+    }
+    return {
+        content: [{ type: "text", text: lines.join('\n') }],
+        structuredContent: status
+    };
+});
 // =============================================================================
 // Main Entry Point
 // =============================================================================
